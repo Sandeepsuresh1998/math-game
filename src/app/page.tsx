@@ -1,5 +1,6 @@
 // MultiplicationGame.js
-"use client";
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -9,22 +10,19 @@ export default function MultiplicationGame() {
   const [answer, setAnswer] = useState('');
   const [timeLeft, setTimeLeft] = useState(30);
   const [gameStarted, setGameStarted] = useState(false);
-  const [feedback, setFeedback] = useState('');
   const [answerClass, setAnswerClass] = useState('');
   const [score, setScore] = useState(0);
+  const [difficulty, setDifficulty] = useState('');
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const startGameParam = searchParams.get('startGame');
 
   useEffect(() => {
     if (startGameParam === 'true') {
-      startGame();
+      startGame('basic');
     }
   }, [startGameParam]);
-
-  useEffect(() => {
-    generateQuestion();
-  }, []);
 
   useEffect(() => {
     if (gameStarted && timeLeft > 0) {
@@ -38,14 +36,26 @@ export default function MultiplicationGame() {
     }
   }, [gameStarted, timeLeft, score, router]);
 
+  useEffect(() => {
+    if (gameStarted) {
+      generateQuestion();
+    }
+  }, [gameStarted, difficulty]);
 
   const generateQuestion = () => {
-    const newNum1 = Math.floor(Math.random() * 12) + 1;
-    const newNum2 = Math.floor(Math.random() * 12) + 1;
+    let newNum1, newNum2;
+
+    if (difficulty === 'basic') {
+      newNum1 = Math.floor(Math.random() * 12) + 1;
+      newNum2 = Math.floor(Math.random() * 12) + 1;
+    } else if (difficulty === 'advanced') {
+      newNum1 = Math.floor(Math.random() * 41) + 10;
+      newNum2 = Math.floor(Math.random() * 41) + 10;
+    }
+
     setNum1(newNum1);
     setNum2(newNum2);
     setAnswer('');
-    setFeedback('');
     setAnswerClass('');
   };
 
@@ -58,7 +68,10 @@ export default function MultiplicationGame() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (parseInt(answer) === num1 * num2) {
+
+    const correctAnswer = num1 * num2;
+
+    if (parseInt(answer) === correctAnswer) {
       setAnswerClass('animate-pulse border-green-500');
       setScore(score + 1);
       setTimeout(() => {
@@ -73,7 +86,8 @@ export default function MultiplicationGame() {
     }
   };
 
-  const startGame = () => {
+  const startGame = (selectedDifficulty) => {
+    setDifficulty(selectedDifficulty);
     setGameStarted(true);
     setTimeLeft(30);
   };
@@ -82,12 +96,20 @@ export default function MultiplicationGame() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-orange-400 to-yellow-500">
       <h1 className="text-4xl font-bold mb-8 text-white">Multiplication Game</h1>
       {!gameStarted ? (
-        <button
-          className="bg-white text-orange-500 px-4 py-2 rounded-md text-xl hover:bg-orange-100 transition duration-200"
-          onClick={startGame}
-        >
-          Start Game
-        </button>
+        <div className="flex space-x-4">
+          <button
+            className="bg-white text-orange-500 px-8 py-2 rounded-md text-xl hover:bg-orange-100 transition duration-200 w-40"
+            onClick={() => startGame('basic')}
+          >
+            Basic
+          </button>
+          <button
+            className="bg-white text-orange-500 px-8 py-2 rounded-md text-xl hover:bg-orange-100 transition duration-200 w-40"
+            onClick={() => startGame('advanced')}
+          >
+            Advanced
+          </button>
+        </div>
       ) : (
         <>
           <div className="text-2xl mb-4 text-white">
